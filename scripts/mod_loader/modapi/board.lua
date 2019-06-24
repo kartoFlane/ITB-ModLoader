@@ -63,3 +63,56 @@ BoardClass.IsTipImage = function(self)
 	
 	return self.isMission == nil
 end
+
+local function buildBoardWrapper(board)
+	local boardWrapper = setmetatable({}, {
+		__index = function(inputTable, inputKey)
+			if type(board[inputKey]) == "function" then
+				inputTable[inputKey] = function(self, ...)
+					return board[inputKey](board, ...)
+				end
+
+				return inputTable[inputKey]
+			elseif board[inputKey] then
+				return board[inputKey]
+			end
+
+			return nil
+		end
+	})
+
+	boardWrapper.GetUserdata = function(self)
+		return board
+	end
+
+	return boardWrapper
+end
+
+local cachedGameBoard = nil
+local oldSetBoard = SetBoard
+function SetBoard(board)
+	if board == nil then
+		cachedGameBoard = nil
+		return oldSetBoard(board)
+	else
+		-- If the board is missing any of the player mechs, then it's not the real game board.
+		-- Don't bother caching it.
+		if board:GetPawn(0) == nil or board:GetPawn(1) == nil or board:GetPawn(2) == nil then
+			return oldSetBoard(buildBoardWrapper(board))
+		end
+
+		if not cachedGameBoard then
+			cachedGameBoard = buildBoardWrapper(board)
+		end
+
+		return oldSetBoard(cachedGameBoard)
+	end
+end
+
+function GetBoard()
+	if Board == nil then
+		return nil
+	else
+		return Board:GetUserdata()
+	end
+end
