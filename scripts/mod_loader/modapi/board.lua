@@ -88,6 +88,14 @@ local function buildBoardWrapper(board)
 	return boardWrapper
 end
 
+local function isGameBoard(board)
+	return board:GetPawn(0) ~= nil and board:GetPawn(1) ~= nil and board:GetPawn(2) ~= nil
+end
+
+local function isTestMechBoard(board)
+	return xor(board:GetPawn(0) ~= nil, board:GetPawn(1) ~= nil, board:GetPawn(2) ~= nil)
+end
+
 local cachedGameBoard = nil
 local oldSetBoard = SetBoard
 function SetBoard(board)
@@ -95,18 +103,15 @@ function SetBoard(board)
 		cachedGameBoard = nil
 		return oldSetBoard(board)
 	else
-		-- If the board is missing any of the player mechs, then it's not the real game board.
-		-- Don't bother caching it.
-		if board:GetPawn(0) == nil or board:GetPawn(1) == nil or board:GetPawn(2) == nil then
-			return oldSetBoard(buildBoardWrapper(board))
+		if isGameBoard(board) or isTestMechBoard(board) then
+			if not cachedGameBoard then
+				cachedGameBoard = buildBoardWrapper(board)
+			end
+			return oldSetBoard(cachedGameBoard)
 		end
-
-		if not cachedGameBoard then
-			cachedGameBoard = buildBoardWrapper(board)
-		end
-
-		return oldSetBoard(cachedGameBoard)
 	end
+
+	return oldSetBoard(buildBoardWrapper(board))
 end
 
 function GetBoard()

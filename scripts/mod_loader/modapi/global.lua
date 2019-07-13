@@ -80,6 +80,42 @@ function compare_tables(tbl1, tbl2)
 	return true
 end
 
+--[[
+	Multivalue XOR function. This function will return true if only one argument is true.
+
+	Usage:
+		local result = xor(true, false, false)
+	OR
+		local tbl = { true, false, false }
+		local result = xor(tbl)
+--]]
+function xor(...)
+	local args = {...}
+	if #args == 1 and type(args[1]) == "table" then
+		args = args[1]
+	end
+
+	Tests.AssertEquals("table", type(args), "xor() accepts a table of boolean value, or multiple boolean arguments")
+
+	local result = false
+
+	for _, v in ipairs(args) do
+		if type(v) ~= "boolean" then
+			v = not (not v)
+		end
+
+		if result and v then
+			return false
+		end
+
+		if v then
+			result = v
+		end
+	end
+
+	return result
+end
+
 Emitter_Blank = Emitter:new({
     timer = 0,
     lifespan = 0,
