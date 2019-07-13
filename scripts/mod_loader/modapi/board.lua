@@ -65,7 +65,7 @@ BoardClass.IsTipImage = function(self)
 end
 
 local function buildBoardWrapper(board)
-	local boardWrapper = setmetatable({}, {
+	local metaBoardWrapper = setmetatable({}, {
 		__index = function(inputTable, inputKey)
 			if type(board[inputKey]) == "function" then
 				inputTable[inputKey] = function(self, ...)
@@ -81,11 +81,12 @@ local function buildBoardWrapper(board)
 		end
 	})
 
-	boardWrapper.GetUserdata = function(self)
-		return board
+	metaBoardWrapper.Board = board
+	metaBoardWrapper.GetUserdata = function(self)
+		return self.Board
 	end
 
-	return boardWrapper
+	return setmetatable({}, { __index = metaBoardWrapper })
 end
 
 local function isGameBoard(board)
